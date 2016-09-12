@@ -73,6 +73,18 @@ def check_blank(out, line_no, segment):
     return check(out, line_no, segment, 'blank', '   \n', 'blank spaces followed by newline')
 
 
+def check_eligibility(out, line_no, fname, lname, ssn, year, month, day, sex):
+    """Check if record is eligible for review"""
+    if fname and lname and ssn:
+        return True
+    if fname and lname and month and year:
+        return True
+    if ssn and year and month and day and sex:
+        return True
+    out.write('{}: eligibility error: subject is illegible for NDI submission'.format(line_no))
+    return False
+
+
 def validate(input_file, output_file):
     """Validate input file according to NDI guidelines"""
     with open(input_file) as f, open(output_file, 'w') as out:
@@ -80,13 +92,13 @@ def validate(input_file, output_file):
             check_line_length(out, line_no, line, 101)  # 101 because this measures the newline/linefeed character
             lname = check_name(out, line_no, line[0:20], 'last name')
             fname = check_name(out, line_no, line[20:35], 'first name')
-            mname = check_name(out, line_no, line[35:36], 'middle initial')
+            check_name(out, line_no, line[35:36], 'middle initial')
             ssn = check_ssn(out, line_no, line[36:45], 'ssn')
             m, d, y = check_dob(out, line_no, line[45:53])
-            mname = check_name(out, line_no, line[53:71], 'father surname')
+            check_name(out, line_no, line[53:71], 'father surname')
             check_age_units(out, line_no, line[71:72])
             check_numeric(out, line_no, line[72:74], 'age value', 'zero-fill two-digit numeric', 2)
-            check_sex(out, line_no, line[74:75])
+            sex = check_sex(out, line_no, line[74:75])
             check_race(out, line_no, line[75:76])
             check_marital_status(out, line_no, line[76:77])
             check_state(out, line_no, line[77:79], True)
@@ -94,6 +106,8 @@ def validate(input_file, output_file):
             check_id(out, line_no, line[81:91])
             check_id(out, line_no, line[91:97])
             check_blank(out, line_no, line[97:101])
+
+            check_eligibility(out, line_no, fname, lname, ssn, y, m, d, sex)
 
 
 def main():
