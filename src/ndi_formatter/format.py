@@ -21,13 +21,7 @@ import re
 from ndi_formatter.attributes import Attribute, Name, SSN, BirthDate, Sex, State, AttributeMapping, DeathAge
 from ndi_formatter.lookup import MS_TO_CODES, RACE_TO_CODES
 from ndi_formatter.utils import flatten_list, combinations
-
-try:
-    import dateutil.parser as dparser
-
-    DATEUTIL_IMPORT = True
-except ImportError:
-    DATEUTIL_IMPORT = False
+from ndi_formatter.validate import validate
 
 try:
     from sas7bdat import SAS7BDAT
@@ -198,7 +192,7 @@ def create_document(input_file, input_format, output_file, name, ssn_col, birthd
 def write(out, lname, fname, mname, sname, ssn, year, month, day, age_units, age, sex, race,
           marital_status, state_of_residence, state_of_birth, id_value, id_dupe=''):
     # 1. name of person in study group
-    out.write('{:<20}'.format(_format_name(lname, 21)))
+    out.write('{:<20}'.format(_format_name(lname, 20)))
     out.write('{:<15}'.format(_format_name(fname, 16)))
     out.write('{:<1}'.format(_format_name(mname, 1)))
     # 2. social security number
@@ -208,7 +202,7 @@ def write(out, lname, fname, mname, sname, ssn, year, month, day, age_units, age
     out.write('{:<2}'.format(_format_number(day, 2)))
     out.write('{:<4}'.format(_format_number(year, 4)))
     # 4. father's surname
-    out.write('{:<17}'.format(_format_name(sname, 18)))
+    out.write('{:<18}'.format(_format_name(sname, 18)))
     # 5. age at death
     if age_units:
         out.write('{:<1}'.format(age_units))
@@ -228,14 +222,14 @@ def write(out, lname, fname, mname, sname, ssn, year, month, day, age_units, age
     # 11. Id number
     out.write('{:<10}'.format(_format_number(id_value, 10)))
     # 12. Duplicate marker
-    out.write('{:<10}'.format(_format_string(id_dupe, 10)))
+    out.write('{:<6}'.format(_format_string(id_dupe, 6)))
     # 13. Blank field
     out.write('{:<3}'.format(''))
     # new line character: this will vary depending on platform
     out.write('\n')
 
 
-if __name__ == '__main__':
+def main():
     import argparse
 
     parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
@@ -293,6 +287,8 @@ if __name__ == '__main__':
     parser.add_argument('--sex-format', default=None,
                         help='Specify the values for male/female if different than NDI using "MALE,FEMALE"; '
                              'NDI default is "M,F" or "1,2"')
+    parser.add_argument('--validate-generated-file',
+                        help='Validate NDI file and output results to specified file.')
 
     args, unk = parser.parse_known_args()
 
@@ -324,3 +320,6 @@ if __name__ == '__main__':
                     Attribute(args.id),
                     {x for x, y in vars(oargs).items() if y},
                     )
+
+    if args.validate_generated_file:
+        validate(args.output_file, args.validate_generated_file)

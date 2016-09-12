@@ -2,13 +2,15 @@ import re
 
 
 def check_line_length(out, line_no, line, expected_size):
+    """expected size includes line feed character, so subtract by 1 to get 100"""
     if len(line) != expected_size:
-        out.write('{}: line length error: expected {} actual {}\n'.format(line_no, expected_size, len(line)))
+        out.write('{}: line length error: expected {} actual {}\n'.format(line_no, expected_size - 1, len(line)))
 
 
 def check(out, line_no, segment, title, regex, requirements):
     if not re.match('^{}$'.format(regex), segment):
-        out.write('{}: {} segment error: requirements not met: {}: {}\n'.format(line_no, title, segment, requirements))
+        out.write(
+            '{}: {} segment error: requirements not met: "{}": {}\n'.format(line_no, title, segment, requirements))
     return not bool(re.match('^ +$', segment))  # was there something present?
 
 
@@ -25,7 +27,8 @@ def check_numeric_range(out, line_no, segment, title, start: int, end: int, leng
     if res:  # if number entered
         value = int(segment)
         if value < start or value > end:
-            out.write('{}: {} segment error: value not between {} and {}\n'.format(line_no, title, start, end))
+            out.write(
+                '{}: {} segment error: value not between {} and {}: "{}"\n'.format(line_no, title, start, end, segment))
     return res
 
 
@@ -67,14 +70,14 @@ def check_id(out, line_no, segment):
 
 
 def check_blank(out, line_no, segment):
-    return check(out, line_no, segment, 'blank', ' {3}', 'blank spaces')
+    return check(out, line_no, segment, 'blank', '   \n', 'blank spaces followed by newline')
 
 
 def validate(input_file, output_file):
     """Validate input file according to NDI guidelines"""
     with open(input_file) as f, open(output_file, 'w') as out:
         for line_no, line in enumerate(f, start=1):
-            check_line_length(out, line_no, line, 100)
+            check_line_length(out, line_no, line, 101)  # 101 because this measures the newline/linefeed character
             lname = check_name(out, line_no, line[0:20], 'last name')
             fname = check_name(out, line_no, line[20:35], 'first name')
             mname = check_name(out, line_no, line[35:36], 'middle initial')
@@ -90,7 +93,7 @@ def validate(input_file, output_file):
             check_state(out, line_no, line[79:81], False)
             check_id(out, line_no, line[81:91])
             check_id(out, line_no, line[91:97])
-            check_blank(out, line_no, line[97:100])
+            check_blank(out, line_no, line[97:101])
 
 
 def main():

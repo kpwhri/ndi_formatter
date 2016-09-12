@@ -1,8 +1,12 @@
 from datetime import datetime
 
-from dateutil import parser as dparser
+try:
+    import dateutil.parser as dparser
 
-from ndi_formatter.format import DATEUTIL_IMPORT
+    DATEUTIL_IMPORT = True
+except ImportError:
+    DATEUTIL_IMPORT = False
+
 from ndi_formatter.lookup import STATES_TO_CODES
 
 
@@ -147,6 +151,7 @@ class Sex(Attribute):
         """
         super().__init__()
         self.sex = sex
+        self.fmt = None
         if fmt:
             self.fmt = fmt.split(',')
             if len(self.fmt) != 2:
@@ -196,7 +201,7 @@ class AttributeMapping(Attribute):
         if mapping:
             self.mapping = {x: y for x, y in zip(mapping, sorted(set(default_mapping.values())))}
         else:
-            self.mapping = mapping
+            self.mapping = default_mapping
 
     def get(self, line, header_to_index):
         if not self.attr:
