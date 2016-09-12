@@ -1,16 +1,20 @@
 import re
 
 
+def output_error(out, line_no, error_type, error_message):
+    out.write('{}: {} error: {}\n'.format(line_no, error_type, error_message))
+
+
 def check_line_length(out, line_no, line, expected_size):
     """expected size includes line feed character, so subtract by 1 to get 100"""
     if len(line) != expected_size:
-        out.write('{}: line length error: expected {} actual {}\n'.format(line_no, expected_size - 1, len(line)))
+        output_error(out, line_no, 'line length', 'expected {} actual {}'.format(expected_size - 1, len(line)))
 
 
 def check(out, line_no, segment, title, regex, requirements):
     if not re.match('^{}$'.format(regex), segment):
-        out.write(
-            '{}: {} segment error: requirements not met: "{}": {}\n'.format(line_no, title, segment, requirements))
+        output_error(out, line_no, '{} segment'.format(title),
+                     'requirements not met: "{}": {}'.format(segment, requirements))
     return not bool(re.match('^ +$', segment))  # was there something present?
 
 
@@ -27,8 +31,8 @@ def check_numeric_range(out, line_no, segment, title, start: int, end: int, leng
     if res:  # if number entered
         value = int(segment)
         if value < start or value > end:
-            out.write(
-                '{}: {} segment error: value not between {} and {}: "{}"\n'.format(line_no, title, start, end, segment))
+            output_error(out, line_no, '{} segment'.format(title),
+                         'value not between {} and {}: "{}"'.format(start, end, segment))
     return res
 
 
@@ -81,7 +85,7 @@ def check_eligibility(out, line_no, fname, lname, ssn, year, month, day, sex):
         return True
     if ssn and year and month and day and sex:
         return True
-    out.write('{}: eligibility error: subject is illegible for NDI submission'.format(line_no))
+    output_error(out, line_no, 'eligibility', 'subject is ineligible for NDI submission')
     return False
 
 

@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 try:
@@ -134,19 +135,23 @@ class BirthDate(Attribute):
         self.fmt = fmt
 
     def get(self, line, header_to_index):
-        year, month, day = 0, 0, 0
+        year, month, day = '', '', ''
         if self.date:
             date = self.get_data(self.date, line, header_to_index)
             if self.fmt:
                 dt = datetime.strptime(date, self.fmt)
             elif DATEUTIL_IMPORT:
-                dt = dparser.parse(date)
+                dt = dparser.parse(date, default=datetime.max)
+                if dt == datetime.max:
+                    logging.warning('dateutil was unable to parse birthdate: "{}"'.format(date))
+                dt = None
             else:
                 raise ValueError(
                     'Unable to parse birthdate. Please install dateutil package or provide a datetime format.')
-            year = dt.year
-            month = dt.month
-            day = dt.day
+            if dt:
+                year = dt.year
+                month = dt.month
+                day = dt.day
         if self.year:
             year = self.get_data(self.year, line, header_to_index)
         if self.month:

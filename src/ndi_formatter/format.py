@@ -177,7 +177,12 @@ def create_document(input_file, input_format, output_file, name, ssn_col, birthd
                 else:
                     msg = 'Invalid record for subject: {}'.format(id_value or lname or ssn or year)
                     logging.error(msg)
-                    if 'ignore-invalid-records' not in options:
+                    if 'include_invalid_records' in options:
+                        logging.warning('Including invalid record: {}'.format(id_value or lname or ssn or year))
+                    elif 'ignore_invalid_records' in options:
+                        logging.warning('Ignoring invalid record: {}'.format(id_value or lname or ssn or year))
+                        continue
+                    else:
                         raise ValidatorException(msg)
 
                 # write line (or multiple lines)
@@ -349,8 +354,10 @@ def main():
                                  'last name field')
     opt_parser.add_argument('--duplicate-records-on-year-only', action='store_true',
                             help='Create 12 duplicate records if only a year and no month')
-    opt_parser.add_argument('--ignore-invalid-record', action='store_true',
+    opt_parser.add_argument('--ignore-invalid-records', action='store_true',
                             help='Ignore records which invalid per NDI requirements due to insufficient information')
+    opt_parser.add_argument('--include-invalid-records', action='store_true',
+                            help='Include records which invalid per NDI requirements due to insufficient information')
     oargs = opt_parser.parse_args(unk)
 
     if args.help or not args.input_file:
