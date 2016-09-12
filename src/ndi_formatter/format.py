@@ -18,6 +18,8 @@ import itertools
 import logging
 import re
 
+import sys
+
 from ndi_formatter.attributes import Attribute, Name, SSN, BirthDate, Sex, State, AttributeMapping, DeathAge
 from ndi_formatter.lookup import MS_TO_CODES, RACE_TO_CODES
 from ndi_formatter.utils import flatten_list, combinations
@@ -267,7 +269,7 @@ def output_sample_config_file():
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
+    parser = argparse.ArgumentParser(fromfile_prefix_chars='@', add_help=False)
     parser.add_argument('-c', '--create-sample', default=False, action='store_true',
                         help='Create sample. Do not process anything.')
     args, _ = parser.parse_known_args()
@@ -275,8 +277,8 @@ def main():
         output_sample_config_file()
         return
 
-    parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
-    parser.add_argument('-i', '--input-file', required=True,
+    parser = argparse.ArgumentParser(fromfile_prefix_chars='@', add_help=False)
+    parser.add_argument('-i', '--input-file',
                         help='Input file path.')
     parser.add_argument('-o', '--output-file', default='ndi_output',
                         help='NDI-formatted output file.')
@@ -284,6 +286,7 @@ def main():
                         help='Input file format.')
     parser.add_argument('-L', '--log-file', default='ndi_formatter.log',
                         help='Logfile name.')
+    parser.add_argument('-h', '--help', action='store_true', default=False)
 
     parser.add_argument('--fname', help='Name/index of column with first name')
     parser.add_argument('--lname', help='Name/index of column with last name')
@@ -349,6 +352,11 @@ def main():
     opt_parser.add_argument('--ignore-invalid-record', action='store_true',
                             help='Ignore records which invalid per NDI requirements due to insufficient information')
     oargs = opt_parser.parse_args(unk)
+
+    if args.help or not args.input_file:
+        parser.print_help()
+        opt_parser.print_help()
+        sys.exit(0)
 
     create_document(args.input_file, args.input_format, args.output_file,
                     Name(args.name, args.fname, args.mname, args.lname, args.sname, args.name_format),
