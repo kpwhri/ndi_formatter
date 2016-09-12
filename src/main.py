@@ -1,4 +1,8 @@
 from ndi_formatter.format import main
 
-if __name__ == '__main__':
+
+def format_ndi():
     main()
+
+if __name__ == '__main__':
+    format_ndi()
