@@ -229,8 +229,51 @@ def write(out, lname, fname, mname, sname, ssn, year, month, day, age_units, age
     out.write('\n')
 
 
+def output_sample_config_file():
+    print("-input-file=PATH_TO_INPUT_FILE")
+    print("-output-file=PATH_TO_OUTPUT_FILE")
+    print("-input-format=CSV|SAS7BDAT|JSON")
+    print("--name=NAME_COL")
+    print("--ssn=SSN_COL")
+    print("--birthdate=BIRTHDATE_COL  # or specify birth-day, birth-month, and birth-year")
+    print("--sex=SEX_COL")
+    print("--sname=SNAME_COL")
+    print("--death-age=DEATH_AGE_COL")
+    print("--race=RACE_COL")
+    print("--marital-status=MARRIED_STATUS_COL")
+    print("--id=ID_COL")
+    print("--same-state-of-residence-for-all=WASHINGTON")
+    print("--state-of-birth=state")
+    print('--name-format="F m L"')
+    print('--sex-format="M1,F2"')
+    print('--marital-status-mapping')
+    print('SINGLE')
+    print('MARRIED')
+    print('WIDOWED')
+    print('DIVORCED')
+    print('--race-mapping')
+    print('"Pacific Islander"')
+    print('White')
+    print('Black')
+    print('Indian')
+    print('Chinese')
+    print('Japanese')
+    print('Hawaiian')
+    print('X  # skip this race')
+    print('Filipino')
+    print("--validate-generated-file=PATH_TO_VALIDATION_FILE")
+
+
 def main():
     import argparse
+
+    parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
+    parser.add_argument('-c', '--create-sample', default=False, action='store_true',
+                        help='Create sample. Do not process anything.')
+    args, _ = parser.parse_known_args()
+    if args.create_sample:
+        output_sample_config_file()
+        return
 
     parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
     parser.add_argument('-i', '--input-file', required=True,
