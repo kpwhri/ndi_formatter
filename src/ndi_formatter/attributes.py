@@ -38,17 +38,25 @@ class Name(Attribute):
         self.sname = sname
         self.name = name
         self.fmt = fmt + 'X'  # add this X as final fencepost to absorb anything remaining
+        self.format_codes = ['L', 'M', 'm', 'F', 'f', 'S', 's', 'X']
 
     def _update_index_and_value(self, idx):
         idx += 1
         if len(self.fmt) <= idx:
             value = None
-        elif self.fmt[idx] in ['L', 'M', 'F', 'S', 'X']:
+        elif self.fmt[idx] in self.format_codes:
             value = self.fmt[idx]
             idx += 1
         else:
             value = None
         return idx, value
+
+    def _get_next_format_token(self, idx):
+        while self.fmt <= idx:
+            if self.fmt[idx] in self.format_codes[:-1]:  # ignore final X
+                return self.fmt[idx]
+            idx += 1
+        return None
 
     def get(self, line, header_to_index):
         fname, mname, lname, sname = '', '', '', ''
@@ -73,6 +81,13 @@ class Name(Attribute):
                     curr = []
                     idx, value = self._update_index_and_value(idx)
             if value:
+                # if value is lower-cased, find next non-lowercased value
+                while value == 'm' or value == 'f' or value == 's':
+                    val = self._get_next_format_token(idx)
+                    if val:
+                        value = val
+                    else:  # no next uppercase value, so treat final as uppercase
+                        value = value.upper()
                 if value == 'L':
                     lname += ''.join(curr)
                 elif value == 'M':
@@ -151,7 +166,7 @@ class Sex(Attribute):
         """
         super().__init__()
         self.sex = sex
-        self.fmt = None
+        self.fmt = '1M', '2F'
         if fmt:
             self.fmt = fmt.split(',')
             if len(self.fmt) != 2:
@@ -161,13 +176,12 @@ class Sex(Attribute):
         sex = ''
         if self.sex:
             sex = str(self.get_data(self.sex, line, header_to_index)).upper()
-            if self.fmt:
-                if sex == self.fmt[0]:
-                    sex = 'M'
-                elif sex == self.fmt[1]:
-                    sex = 'F'
-                else:
-                    sex = ''
+            if sex in self.fmt[0]:
+                sex = 'M'
+            elif sex in self.fmt[1]:
+                sex = 'F'
+            else:
+                sex = ''
         return sex
 
 
@@ -185,7 +199,7 @@ class State(Attribute):
         else:
             state = str(self.get_data(self.state, line, header_to_index)).upper()
 
-        if not state:
+        if not state.strip():
             return ''
         elif state in STATES_TO_CODES:
             return STATES_TO_CODES[state]
@@ -207,7 +221,10 @@ class AttributeMapping(Attribute):
         if not self.attr:
             return ''
         attr = str(self.get_data(self.attr, line, header_to_index))
-        return self.mapping[attr]
+        if attr in self.mapping:
+            return self.mapping[attr]
+        else:
+            return ''
 
 
 class DeathAge(Attribute):
