@@ -34,26 +34,31 @@ except ImportError:
 
 
 class FileHandler(object):
-    def __init__(self, input_file, input_format):
+    def __init__(self, input_file, input_format, ignore_case=True):
         self.input_file = input_file
-        self.input_format = input_format
+        self.input_format = input_format.lower()
         self.line = None
         self.iterator = None
         self.handler = None
+        self.ignore_case = ignore_case
 
     def __enter__(self):
-        if self.input_format == 'sas':
-            self.handler = SAS7BDAT(self.input_file).__enter__()
-            self.iterator = self.handler
-            self.header = [col.name.decode(self.handler.encoding) if isinstance(col.name, bytes) else col.name
-                           for col in self.handler.columns]
-            self.header_to_index = {name: idx for idx, name in enumerate(self.header)}
-        elif self.input_format == 'csv':
-            self.handler = open(self.input_file, 'r').__enter__()
-            self.iterator = csv.reader(self.handler)
-            self.header = self.iterator.__next__()
-            self.header_to_index = {name: idx for idx, name in enumerate(self.header)}
-        self.__next__()
+        if self.input_format in ['sas', 'csv']:
+            if self.input_format == 'sas':
+                self.handler = SAS7BDAT(self.input_file).__enter__()
+                self.iterator = self.handler.readlines()
+                self.header = next(self.iterator)
+            elif self.input_format == 'csv':
+                self.handler = open(self.input_file, 'r').__enter__()
+                self.iterator = csv.reader(self.handler)
+                self.header = self.iterator.__next__()
+
+            if self.ignore_case:
+                self.header_to_index = {name.upper(): idx for idx, name in enumerate(self.header)}
+            else:
+                self.header_to_index = {name: idx for idx, name in enumerate(self.header)}
+
+        self.next_line()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -61,7 +66,7 @@ class FileHandler(object):
 
     def __next__(self):
         if self.input_format == 'sas':
-            self.line = self.iterator.readlines()
+            self.line = next(self.iterator)
         elif self.input_format == 'csv':
             self.line = self.iterator.__next__()
 
@@ -72,7 +77,7 @@ class FileHandler(object):
             return False
         return bool(self.line)
 
-    def get(self, col):
+    def get(self, col: Attribute):
         return col.get(self.line, self.header_to_index)
 
 
@@ -122,7 +127,8 @@ def month_iterator():
 def create_document(input_file, input_format, output_file, name, ssn_col, birthdate, death_col, sex_col,
                     race_col, ms_col, residence_state_col, birth_state_col, id_col,
                     options):
-    with FileHandler(input_file, input_format) as f:
+    Attribute.IGNORE_CASE = 'case_insensitive_columns' in options
+    with FileHandler(input_file, input_format, ignore_case=Attribute.IGNORE_CASE) as f:
         with open(output_file, 'w') as out:
             while True:
                 # this is for naming each permutation
@@ -153,8 +159,9 @@ def create_document(input_file, input_format, output_file, name, ssn_col, birthd
                 # check names
                 names = [names]
                 p_names = []
-                if '-' in lname or ' ' in lname and ('duplicate_records_on_lname' in options
-                                                     or ('female_hyphen_lname_to_sname' in options and sex in ['2', 'F'])):
+                if ('-' in lname or ' ' in lname) \
+                        and ('duplicate_records_on_lname' in options
+                             or ('female_hyphen_lname_to_sname' in options and sex in ['2', 'F'])):
                     p_names.append('')
                     if 'duplicate_records_on_lname' in options:
                         for ln in re.compile('-| ').split(lname):
@@ -237,9 +244,10 @@ def write(out, lname, fname, mname, sname, ssn, year, month, day, age_units, age
 
 
 def output_sample_config_file():
-    print("-input-file=PATH_TO_INPUT_FILE")
-    print("-output-file=PATH_TO_OUTPUT_FILE")
-    print("-input-format=CSV|SAS7BDAT|JSON")
+    print("# comments like this will need to be removed from your config file")
+    print("--input-file=PATH_TO_INPUT_FILE")
+    print("--output-file=PATH_TO_OUTPUT_FILE")
+    print("--input-format=CSV|SAS7BDAT|JSON")
     print("--name=NAME_COL")
     print("--ssn=SSN_COL")
     print("--birthdate=BIRTHDATE_COL  # or specify birth-day, birth-month, and birth-year")
@@ -287,7 +295,7 @@ def main():
                         help='Input file path.')
     parser.add_argument('-o', '--output-file', default='ndi_output',
                         help='NDI-formatted output file.')
-    parser.add_argument('-f', '--input-format', choices=['sas', 'csv', 'json'], default='sas',
+    parser.add_argument('-f', '--input-format', type=str.lower, choices=['sas', 'csv', 'json'], default='sas',
                         help='Input file format.')
     parser.add_argument('-L', '--log-file', default='ndi_formatter.log',
                         help='Logfile name.')
@@ -337,7 +345,7 @@ def main():
                              'https://docs.python.org/dev/library/datetime.html#strftime-and-strptime-behavior')
     parser.add_argument('--sex-format', default=None,
                         help='Specify the values for male/female if different than NDI using "MALE,FEMALE"; '
-                             'NDI default is "M,F" or "1,2"')
+                             'NDI default is "M,F" or "1,2" or "M1,F2"')
     parser.add_argument('--validate-generated-file', default=None, const=sys.stderr, nargs='?',
                         help='Validate NDI file and output results to specified file.')
 
@@ -358,6 +366,8 @@ def main():
                             help='Ignore records which invalid per NDI requirements due to insufficient information')
     opt_parser.add_argument('--include-invalid-records', action='store_true',
                             help='Include records which invalid per NDI requirements due to insufficient information')
+    opt_parser.add_argument('--case-sensitive-columns', dest='case_insensitive_columns', action='store_false',
+                            help='All columns will be treated as case-sensitive.')
     oargs = opt_parser.parse_args(unk)
 
     if args.help or not args.input_file:

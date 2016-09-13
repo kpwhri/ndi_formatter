@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, date as dt_date
 
 try:
     import dateutil.parser as dparser
@@ -12,11 +12,14 @@ from ndi_formatter.lookup import STATES_TO_CODES
 
 
 class Attribute(object):
+    IGNORE_CASE = True
+
     def __init__(self, val=None):
         self.val = val
 
-    @staticmethod
-    def get_data(val, line, header_to_index):
+    def get_data(self, val, line, header_to_index):
+        if self.IGNORE_CASE:
+            val = str(val).upper()
         if val in header_to_index:
             return line[header_to_index[val]]
         try:  # assume this is an index
@@ -28,6 +31,7 @@ class Attribute(object):
     def get(self, line, header_to_index):
         if self.val:
             return self.get_data(self.val, line, header_to_index)
+        return ''
 
 
 class Name(Attribute):
@@ -138,7 +142,9 @@ class BirthDate(Attribute):
         year, month, day = '', '', ''
         if self.date:
             date = self.get_data(self.date, line, header_to_index)
-            if self.fmt:
+            if isinstance(date, (dt_date, datetime)):  # loading process sometimes creates python datetime
+                dt = date
+            elif self.fmt:
                 dt = datetime.strptime(date, self.fmt)
             elif DATEUTIL_IMPORT:
                 dt = dparser.parse(date, default=datetime.max)
