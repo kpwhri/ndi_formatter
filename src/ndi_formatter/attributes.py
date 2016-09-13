@@ -35,8 +35,10 @@ class Attribute(object):
 
 
 class Name(Attribute):
-    def __init__(self, name=None, fname=None, mname=None, lname=None, sname=None, fmt='L, F M.'):
+    def __init__(self, name=None, fname=None, mname=None, lname=None, sname=None, fmt='L, F M.',
+                 strip_lname_suffix=None):
         super().__init__()
+        self.strip_lname_suffix = strip_lname_suffix
         self.fname = fname
         self.mname = mname
         self.lname = lname
@@ -108,6 +110,11 @@ class Name(Attribute):
             mname = self.get_data(self.mname, line, header_to_index)
         if self.lname:
             lname = self.get_data(self.lname, line, header_to_index)
+            # strip last name suffix?
+            last_names = lname.split()
+            if len(last_names) > 0 and last_names[-1].upper() in self.strip_lname_suffix:
+                lname = ' '.join(last_names[:-1])
+
         if self.sname:
             sname = self.get_data(self.sname, line, header_to_index)
         return lname, fname, mname[0] if len(mname) > 0 else '', sname
