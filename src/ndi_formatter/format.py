@@ -338,7 +338,7 @@ def main():
     parser.add_argument('--sex-format', default=None,
                         help='Specify the values for male/female if different than NDI using "MALE,FEMALE"; '
                              'NDI default is "M,F" or "1,2"')
-    parser.add_argument('--validate-generated-file',
+    parser.add_argument('--validate-generated-file', default=None, const=sys.stderr, nargs='?',
                         help='Validate NDI file and output results to specified file.')
 
     args, unk = parser.parse_known_args()

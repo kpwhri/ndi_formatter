@@ -1,5 +1,7 @@
 import re
 
+import sys
+
 
 def output_error(out, line_no, error_type, error_message):
     out.write('{}: {} error: {}\n'.format(line_no, error_type, error_message))
@@ -44,7 +46,7 @@ def check_dob(out, line_no, segment):
     month = check_numeric(out, line_no, segment[0:2], 'month', 'numeric, zero-fill', 2)
     day = check_numeric(out, line_no, segment[2:4], 'day', 'numeric, zero-fill', 2)
     year = check_numeric(out, line_no, segment[4:8], 'year', 'numeric', 4)
-    return month, day, year
+    return year, month, day
 
 
 def check_age_units(out, line_no, segment):
@@ -89,16 +91,20 @@ def check_eligibility(out, line_no, fname, lname, ssn, year, month, day, sex):
     return False
 
 
-def validate(input_file, output_file):
+def validate(input_file, output_file=sys.stderr):
     """Validate input file according to NDI guidelines"""
-    with open(input_file) as f, open(output_file, 'w') as out:
+    with open(input_file) as f:
+        try:
+            out = open(output_file, 'w')
+        except TypeError:
+            out = output_file
         for line_no, line in enumerate(f, start=1):
             check_line_length(out, line_no, line, 101)  # 101 because this measures the newline/linefeed character
             lname = check_name(out, line_no, line[0:20], 'last name')
             fname = check_name(out, line_no, line[20:35], 'first name')
             check_name(out, line_no, line[35:36], 'middle initial')
             ssn = check_ssn(out, line_no, line[36:45], 'ssn')
-            m, d, y = check_dob(out, line_no, line[45:53])
+            y, m, d = check_dob(out, line_no, line[45:53])
             check_name(out, line_no, line[53:71], 'father surname')
             check_age_units(out, line_no, line[71:72])
             check_numeric(out, line_no, line[72:74], 'age value', 'zero-fill two-digit numeric', 2)
@@ -113,13 +119,16 @@ def validate(input_file, output_file):
 
             check_eligibility(out, line_no, fname, lname, ssn, y, m, d, sex)
 
+        out.close()  # both stderr and files can be closed
+
+
 
 def main():
     import argparse
     parser = argparse.ArgumentParser(fromfile_prefix_chars='@')
-    parser.add_argument('-i', '--input-file',
+    parser.add_argument('-i', '--input-file', required=True,
                         help='Input candidate NDI file.')
-    parser.add_argument('-o', '--output-file',
+    parser.add_argument('-o', '--output-file', default=sys.stderr,
                         help='File containing any validation errors.')
     args = parser.parse_args()
 
