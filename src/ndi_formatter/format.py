@@ -77,7 +77,27 @@ class FileHandler(object):
             return False
         return bool(self.line)
 
-    def get(self, col: Attribute):
+    def get(self, col, perm_names=None):
+        if isinstance(col, Attribute):
+            return self._get(col)
+        elif isinstance(col, list):
+            results = []
+            p_names = []
+            for i, c in enumerate(col):
+                res = self._get(c)
+                if res.strip() and res not in results:
+                    p_names.append(c.__class__.__name__[:2] + str(i))  # TODO: should something be included here?
+                    results.append(res)
+            if len(results) > 1:
+                perm_names.append(p_names)
+                return results
+            elif len(results) == 1:
+                return results[0]
+            return ''  # there's only one attribute
+        else:
+            raise ValueError('Unrecognized format for Attribute: {}'.format(col))
+
+    def _get(self, col: Attribute):
         return col.get(self.line, self.header_to_index)
 
 
@@ -145,7 +165,7 @@ def create_document(input_file, input_format, output_file, name, ssn_col, birthd
                 sex = f.get(sex_col)
                 race = f.get(race_col)
                 marital_status = f.get(ms_col)
-                state_of_residence = f.get(residence_state_col)
+                state_of_residence = f.get(residence_state_col, permutation_names)
                 state_of_birth = f.get(birth_state_col)
                 id_value = f.get(id_col)
 
@@ -195,7 +215,14 @@ def create_document(input_file, input_format, output_file, name, ssn_col, birthd
                 # write line (or multiple lines)
                 values = [names, ssn, year, month, day, age_units, age, sex, race,
                           marital_status, state_of_residence, state_of_birth, id_value]
+                if isinstance(state_of_residence, list) and len(state_of_residence) > 1:
+                    print('>>', state_of_residence)
+                    print(values)
+                    print(list(itertools.product(*permutation_names)))
+                    print(list(combinations(values)))
                 for arguments, id_dupe in zip(combinations(values), itertools.product(*permutation_names)):
+                    if isinstance(id_dupe, tuple) and len(id_dupe) > 0:
+                        id_dupe = id_dupe[0]
                     write(out, *flatten_list(arguments), id_dupe=id_dupe or '')
 
                 # move to next line
@@ -277,6 +304,10 @@ def output_sample_config_file():
     print('X  # skip this race')
     print('Filipino')
     print("--validate-generated-file=PATH_TO_VALIDATION_FILE")
+
+
+def multiple_args(klass, column_names, *args):
+    return [klass(col, *args) for col in column_names.split(',')]
 
 
 def main():
@@ -384,17 +415,19 @@ def main():
         sys.exit(0)
 
     create_document(args.input_file, args.input_format, args.output_file,
+                    # multiples would be very difficult to handle for names
                     Name(args.name, args.fname, args.mname, args.lname, args.sname, args.name_format,
                          args.strip_lname_suffix.split(','), args.strip_lname_suffix_attached.split(',')),
-                    SSN(args.ssn),
+                    multiple_args(SSN, args.ssn),
+                    # multiples would need to be incorporated into additional logic in validation section
                     BirthDate(args.birthdate, args.birth_year, args.birth_month, args.birth_day, args.date_format),
-                    DeathAge(args.death_age, args.age_at_death_units_for_all),
-                    Sex(args.sex, args.sex_format),
-                    AttributeMapping(args.race, RACE_TO_CODES, args.race_mapping),
-                    AttributeMapping(args.marital_status, MS_TO_CODES, args.marital_status_mapping),
-                    State(args.state_of_residence, args.same_state_of_residence_for_all),
-                    State(args.state_of_birth, args.same_state_of_birth_for_all),
-                    Attribute(args.id),
+                    multiple_args(DeathAge, args.death_age, args.age_at_death_units_for_all),
+                    multiple_args(Sex, args.sex, args.sex_format),
+                    multiple_args(AttributeMapping, args.race, RACE_TO_CODES, args.race_mapping),
+                    multiple_args(AttributeMapping, args.marital_status, MS_TO_CODES, args.marital_status_mapping),
+                    multiple_args(State, args.state_of_residence, args.same_state_of_residence_for_all),
+                    multiple_args(State, args.state_of_birth, args.same_state_of_birth_for_all),
+                    Attribute(args.id),  # can't have multiples
                     {x for x, y in vars(oargs).items() if y},
                     )
 

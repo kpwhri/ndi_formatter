@@ -54,6 +54,17 @@ The best way to get started is to figure out which options you need to pass.
     
     # run with a config file
     ndi-formatter "@configfile.conf"
+
+### Advanced ###
+#### Multiple Columns ####
+You can output multiple columns on most options (not names or birthdate due to complexities with how they are handled, and not id because that wouldn't make any sense) by inserting a comma-separated set of values to arguments.
+ 
+If the columns have the same input, only one output will be produced. If the columns have different values, then multiple records will be output.
+
+    # option to look at two columns for state of residence
+    # if PRIMARY_STATE == SECONDARY_STATE, only one record will be output
+    --state-of-residence=PRIMARY_STATE,SECONDARY_STATE
+
     
 ### Validation ###
 Validation is done during formatting to ensure that patients are eligible to be submitted to NDI (unless suppressed by `--ignore-invalid-record` option).
