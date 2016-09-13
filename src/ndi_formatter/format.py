@@ -348,8 +348,13 @@ def main():
                              'NDI default is "M,F" or "1,2" or "M1,F2"')
     parser.add_argument('--validate-generated-file', default=None, const=sys.stderr, nargs='?',
                         help='Validate NDI file and output results to specified file.')
-    parser.add_argument('--strip-lname-suffix', default=None, const='JR,SR,II,III,IV', nargs='?',
+    parser.add_argument('--strip-lname-suffix', default=None, const='JR,SR,II,III,IV', nargs='?', type=str.upper,
                         help='Look for suffixes in lname column and strip them out; default: JR, SR, II, III, IV;'
+                             ' if specifying an argument, use a comma-separated list as a single string')
+    parser.add_argument('--strip-lname-suffix-attached', default=None, const='JR,SR,II,III,IV', nargs='?',
+                        type=str.upper,
+                        help='Look for suffixes in last word of lname column and strip them out even if they '
+                             ' are attached to the word itself; default: JR, SR, II, III, IV;'
                              ' if specifying an argument, use a comma-separated list as a single string')
 
     args, unk = parser.parse_known_args()
@@ -380,7 +385,7 @@ def main():
 
     create_document(args.input_file, args.input_format, args.output_file,
                     Name(args.name, args.fname, args.mname, args.lname, args.sname, args.name_format,
-                         args.strip_lname_suffix.split(',')),
+                         args.strip_lname_suffix.split(','), args.strip_lname_suffix_attached.split(',')),
                     SSN(args.ssn),
                     BirthDate(args.birthdate, args.birth_year, args.birth_month, args.birth_day, args.date_format),
                     DeathAge(args.death_age, args.age_at_death_units_for_all),
