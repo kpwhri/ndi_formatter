@@ -188,9 +188,21 @@ def create_document(input_file, input_format, output_file, name, ssn_col, birthd
                             names.append([ln, fname, mname, sname])
                             p_names.append('L')
                     if 'female_hyphen_lname_to_sname' in options and sex in ['2', 'F']:
-                        sn, ln = re.compile('-| ').split(lname)
-                        names.append([ln, fname, mname, sn])
-                        p_names.append('S')
+                        sn = re.compile('-| ').split(lname)
+                        if len(sn) == 2:  # only handle when there are two names
+                            sn1, sn2 = sn
+                            # Dutch/German "from" common case of FPs
+                            if sn1.upper() in ['VAN', 'VON', 'VANDER', 'VONDER', 'VANDEN', 'VER', 'VANDE', 'VANT',
+                                               'ST']:
+                                p_names = []
+                            else:
+                                # account for both possible orderings
+                                names.append([sn2, fname, mname, sn1])
+                                names.append([sn1, fname, mname, sn2])
+                                p_names.append('S1')
+                                p_names.append('S2')
+                        else:
+                            p_names = []
 
                 if p_names:
                     permutation_names.append(p_names)
@@ -215,11 +227,6 @@ def create_document(input_file, input_format, output_file, name, ssn_col, birthd
                 # write line (or multiple lines)
                 values = [names, ssn, year, month, day, age_units, age, sex, race,
                           marital_status, state_of_residence, state_of_birth, id_value]
-                if isinstance(state_of_residence, list) and len(state_of_residence) > 1:
-                    print('>>', state_of_residence)
-                    print(values)
-                    print(list(itertools.product(*permutation_names)))
-                    print(list(combinations(values)))
                 for arguments, id_dupe in zip(combinations(values), itertools.product(*permutation_names)):
                     if isinstance(id_dupe, tuple) and len(id_dupe) > 0:
                         id_dupe = id_dupe[0]
