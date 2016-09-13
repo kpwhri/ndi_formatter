@@ -86,7 +86,7 @@ class FileHandler(object):
             for i, c in enumerate(col):
                 res = self._get(c)
                 if res.strip() and res not in results:
-                    p_names.append(c.__class__.__name__[:2] + str(i))  # TODO: should something be included here?
+                    p_names.append(c.__class__.__name__[:2].upper() + str(i))  # TODO: what to include here?
                     results.append(res)
             if len(results) > 1:
                 perm_names.append(p_names)
@@ -307,7 +307,10 @@ def output_sample_config_file():
 
 
 def multiple_args(klass, column_names, *args):
-    return [klass(col, *args) for col in column_names.split(',')]
+    if column_names:
+        return [klass(col, *args) for col in column_names.split(',')]
+    else:
+        return klass(column_names, *args)
 
 
 def main():
