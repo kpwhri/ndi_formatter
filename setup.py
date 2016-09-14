@@ -1,9 +1,15 @@
 from distutils.core import setup
 import setuptools
+import os
+
+with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'README.md'),
+          encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(name='ndi_formatter',
       version='0.2',
       description='Format data for NDI requests.',
+      long_description=long_description,
       url='https://bitbucket.org/dcronkite/ndi_formatter',
       author='dcronkite',
       author_email='dcronkite-gmail',
