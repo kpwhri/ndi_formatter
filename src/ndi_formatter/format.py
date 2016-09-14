@@ -288,11 +288,11 @@ def output_sample_config_file():
     print("--sex=SEX_COL")
     print("--sname=SNAME_COL")
     print("--death-age=DEATH_AGE_COL")
-    print("--race=RACE_COL")
+    print("--race=RACE_COL,RACE2_COL")
     print("--marital-status=MARRIED_STATUS_COL")
     print("--id=ID_COL")
     print("--same-state-of-residence-for-all=WASHINGTON")
-    print("--state-of-birth=state")
+    print("--state-of-birth=STATE_COL")
     print('--name-format="F m L"')
     print('--sex-format="M1,F2"')
     print('--marital-status-mapping')
@@ -347,26 +347,30 @@ def main():
     parser.add_argument('--mname', help='Name/index of column with middle name/initial')
     parser.add_argument('--sname', help='Name/index of column with father name')
     parser.add_argument('--name', help='Name/index of column with full name')
-    parser.add_argument('--ssn', help='Name/index of column with ssn')
+    parser.add_argument('--ssn', help='Name/index of column with ssn; accepts multiple columns')
     parser.add_argument('--birth-day', help='Name/index of column with birth day')
     parser.add_argument('--birth-month', help='Name/index of column with birth month')
     parser.add_argument('--birth-year', help='Name/index of column with birth year')
     parser.add_argument('--birthdate', help='Name/index of column with birthdate')
-    parser.add_argument('--sex', help='Name/index of column with sex')
-    parser.add_argument('--death-age', help='Name/index of column with age at death (in years)')
-    parser.add_argument('--race', help='Name/index of column with race')
-    parser.add_argument('--marital-status', help='Name/index of column with marital status')
-    parser.add_argument('--state-of-residence', help='Name/index of column with marital status')
-    parser.add_argument('--state-of-birth', help='Name/index of column with marital status')
+    parser.add_argument('--sex', help='Name/index of column with sex; accepts multiple columns')
+    parser.add_argument('--death-age', help='Name/index of column with age at death (in years);'
+                                            ' accepts multiple columns')
+    parser.add_argument('--race', help='Name/index of column with race; accepts multiple columns')
+    parser.add_argument('--marital-status', help='Name/index of column with marital status; accepts multiple columns')
+    parser.add_argument('--state-of-residence', help='Name/index of column with state of residence;'
+                                                     ' accepts multiple columns')
+    parser.add_argument('--state-of-birth', help='Name/index of column with state of birth; accepts multiple columns')
     parser.add_argument('--id', help='Name/index of column with id number')
 
     # additional configuration/formatting
     parser.add_argument('--race-mapping', nargs=9, default=None,
+                        metavar=('OA/PI', 'WH', 'BA', 'NA/IN', 'CH', 'JP', 'HI', 'Onon-WH', 'FL'),
                         help='Mapping of variable to NDI race in following order: '
                              'Other Asian/Pacific Islander, White, Black, Indian, Chinese, Japanese, Hawaiian, '
                              'Other nonwhite, Filipino; everything else will be treated '
                              'as unknown; use an "X" instead of a value to skip a race')
     parser.add_argument('--marital-status-mapping', nargs=4, default=None,
+                        metavar=('Single', 'Married', 'Widowed', 'Divorced'),
                         help='Mapping of variable to ND marital status in following order: '
                              'Never married/single, Married, Widowed, Divorced; everything else will '
                              'be treated as unknown; use an "X" instead of a value to skip a status')
