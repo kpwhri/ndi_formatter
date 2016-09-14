@@ -63,7 +63,7 @@ class Name(Attribute):
         return idx, value
 
     def _get_next_format_token(self, idx):
-        while len(self.fmt) <= idx:
+        while len(self.fmt) > idx:
             if self.fmt[idx] in self.format_codes[:-1]:  # ignore final X
                 return self.fmt[idx]
             idx += 1
@@ -81,19 +81,19 @@ class Name(Attribute):
                     curr.append(letter)
                 else:  # found end of current section
                     if value:
-                        if value == 'L':
+                        if value in 'L':
                             lname += ''.join(curr)
-                        elif value == 'M':
+                        elif value in 'Mm':
                             mname += ''.join(curr)
-                        elif value == 'F':
+                        elif value in 'Ff':
                             fname += ''.join(curr)
-                        elif value == 'S':
+                        elif value in 'Ss':
                             fname += ''.join(curr)
                     curr = []
                     idx, value = self._update_index_and_value(idx)
             if value:
                 # if value is lower-cased, find next non-lowercased value
-                while value == 'm' or value == 'f' or value == 's':
+                while value in 'fms':
                     val = self._get_next_format_token(idx)
                     if val:
                         value = val
