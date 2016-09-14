@@ -2,7 +2,7 @@ from distutils.core import setup
 import setuptools
 
 setup(name='ndi_formatter',
-      version='0.1',
+      version='0.2',
       description='Format data for NDI requests.',
       url='https://bitbucket.org/dcronkite/ndi_formatter',
       author='dcronkite',
