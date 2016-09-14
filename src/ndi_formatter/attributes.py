@@ -21,7 +21,10 @@ class Attribute(object):
         if self.IGNORE_CASE:
             val = str(val).upper()
         if val in header_to_index:
-            return line[header_to_index[val]]
+            if header_to_index[val] in line:
+                return line[header_to_index[val]]
+            else:  # account for incomplete json data entries
+                return ''
         try:  # assume this is an index
             return line[int(val)]
         except ValueError:
@@ -60,7 +63,7 @@ class Name(Attribute):
         return idx, value
 
     def _get_next_format_token(self, idx):
-        while self.fmt <= idx:
+        while len(self.fmt) <= idx:
             if self.fmt[idx] in self.format_codes[:-1]:  # ignore final X
                 return self.fmt[idx]
             idx += 1

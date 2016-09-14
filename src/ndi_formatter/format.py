@@ -15,6 +15,7 @@
 """
 import csv
 import itertools
+import json
 import logging
 import re
 
@@ -50,13 +51,25 @@ class FileHandler(object):
                 self.header = next(self.iterator)
             elif self.input_format == 'csv':
                 self.handler = open(self.input_file, 'r').__enter__()
-                self.iterator = csv.reader(self.handler)
+                self.iterator = csv.reader(self.handler)  # first line is header
                 self.header = self.iterator.__next__()
 
             if self.ignore_case:
                 self.header_to_index = {name.upper(): idx for idx, name in enumerate(self.header)}
             else:
                 self.header_to_index = {name: idx for idx, name in enumerate(self.header)}
+
+        elif self.input_format in ['json']:
+            self.handler = open(self.input_file).__enter__()
+            lst = json.load(self.handler)
+            if self.ignore_case:
+                self.header_to_index = {n.upper(): n for n in lst[0].keys()}  # no indices in json
+            else:
+                self.header_to_index = {n: n for n in lst[0].keys()}  # no indices in json
+            self.iterator = iter(lst)
+
+        else:
+            raise ValueError('Unsupported file type: "{}"')
 
         self.next_line()
         return self
@@ -68,7 +81,9 @@ class FileHandler(object):
         if self.input_format == 'sas':
             self.line = next(self.iterator)
         elif self.input_format == 'csv':
-            self.line = self.iterator.__next__()
+            self.line = next(self.iterator)
+        elif self.input_format == 'json':
+            self.line = next(self.iterator)
 
     def next_line(self):
         try:
@@ -353,8 +368,7 @@ def main():
     parser.add_argument('--birth-year', help='Name/index of column with birth year')
     parser.add_argument('--birthdate', help='Name/index of column with birthdate')
     parser.add_argument('--sex', help='Name/index of column with sex; accepts multiple columns')
-    parser.add_argument('--death-age', help='Name/index of column with age at death (in years);'
-                                            ' accepts multiple columns')
+    parser.add_argument('--death-age', help='Name/index of column with age at death (in years)')
     parser.add_argument('--race', help='Name/index of column with race; accepts multiple columns')
     parser.add_argument('--marital-status', help='Name/index of column with marital status; accepts multiple columns')
     parser.add_argument('--state-of-residence', help='Name/index of column with state of residence;'
@@ -393,10 +407,10 @@ def main():
                              'NDI default is "M,F" or "1,2" or "M1,F2"')
     parser.add_argument('--validate-generated-file', default=None, const=sys.stderr, nargs='?',
                         help='Validate NDI file and output results to specified file.')
-    parser.add_argument('--strip-lname-suffix', default=None, const='JR,SR,II,III,IV', nargs='?', type=str.upper,
+    parser.add_argument('--strip-lname-suffix', default='', const='JR,SR,II,III,IV', nargs='?', type=str.upper,
                         help='Look for suffixes in lname column and strip them out; default: JR, SR, II, III, IV;'
                              ' if specifying an argument, use a comma-separated list as a single string')
-    parser.add_argument('--strip-lname-suffix-attached', default=None, const='JR,SR,II,III,IV', nargs='?',
+    parser.add_argument('--strip-lname-suffix-attached', default='', const='JR,SR,II,III,IV', nargs='?',
                         type=str.upper,
                         help='Look for suffixes in last word of lname column and strip them out even if they '
                              ' are attached to the word itself; default: JR, SR, II, III, IV;'
@@ -435,7 +449,7 @@ def main():
                     multiple_args(SSN, args.ssn),
                     # multiples would need to be incorporated into additional logic in validation section
                     BirthDate(args.birthdate, args.birth_year, args.birth_month, args.birth_day, args.date_format),
-                    multiple_args(DeathAge, args.death_age, args.age_at_death_units_for_all),
+                    DeathAge(args.death_age, args.age_at_death_units_for_all),
                     multiple_args(Sex, args.sex, args.sex_format),
                     multiple_args(AttributeMapping, args.race, RACE_TO_CODES, args.race_mapping),
                     multiple_args(AttributeMapping, args.marital_status, MS_TO_CODES, args.marital_status_mapping),
