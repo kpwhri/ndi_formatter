@@ -7,15 +7,15 @@ with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'README.md'),
     long_description = f.read()
 
 setup(name='ndi_formatter',
-      version='0.2',
+      version='1.0',
       description='Format data for National Death Index (NDI) requests.',
       long_description=long_description,
       url='https://bitbucket.org/dcronkite/ndi_formatter',
       author='dcronkite',
-      author_email='dcronkite-gmail',
+      author_email='dcronkite@gmail.com',
       license='MIT',
       classifiers=[  # from https://pypi.python.org/pypi?%3Aaction=list_classifiers
-          'Development Status :: 4 - Beta',
+          'Development Status :: 5 - Production/Stable',
           'Intended Audience :: Science/Research',
           'Programming Language :: Python :: 3 :: Only',
       ],
