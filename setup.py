@@ -8,7 +8,7 @@ with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'README.md'),
 
 setup(name='ndi_formatter',
       version='0.2',
-      description='Format data for NDI requests.',
+      description='Format data for National Death Index (NDI) requests.',
       long_description=long_description,
       url='https://bitbucket.org/dcronkite/ndi_formatter',
       author='dcronkite',
