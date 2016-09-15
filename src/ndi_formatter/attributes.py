@@ -21,7 +21,8 @@ class Attribute(object):
         if self.IGNORE_CASE:
             val = str(val).upper()
         if val in header_to_index:
-            if header_to_index[val] in line:
+            if header_to_index[val] in line or (
+                        isinstance(header_to_index[val], int) and header_to_index[val] < len(line)):
                 return line[header_to_index[val]]
             else:  # account for incomplete json data entries
                 return ''
