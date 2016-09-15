@@ -1,6 +1,7 @@
 import re
 
 import sys
+from collections import defaultdict
 
 
 def output_error(out, line_no, error_type, error_message):
@@ -91,6 +92,15 @@ def check_eligibility(out, line_no, fname, lname, ssn, year, month, day, sex):
     return False
 
 
+def check_duplicates(out, records):
+    for segment in records:
+        if len(records[segment]) > 1:
+            duplicates = ', '.join(str(x) for x in records[segment])
+            for line_no in records[segment]:
+                output_error(out, line_no, 'duplicate',
+                             'same record appears in lines {}: "{}"'.format(duplicates, segment))
+
+
 def validate(input_file, output_file=sys.stderr):
     """Validate input file according to NDI guidelines"""
     with open(input_file) as f:
@@ -98,8 +108,11 @@ def validate(input_file, output_file=sys.stderr):
             out = open(output_file, 'w')
         except TypeError:
             out = output_file
+        records = defaultdict(list)
         for line_no, line in enumerate(f, start=1):
             check_line_length(out, line_no, line, 101)  # 101 because this measures the newline/linefeed character
+
+            # segment check
             lname = check_name(out, line_no, line[0:20], 'last name')
             fname = check_name(out, line_no, line[20:35], 'first name')
             check_name(out, line_no, line[35:36], 'middle initial')
@@ -117,10 +130,16 @@ def validate(input_file, output_file=sys.stderr):
             check_id(out, line_no, line[91:97])
             check_blank(out, line_no, line[97:101])
 
+            # eligibility check
             check_eligibility(out, line_no, fname, lname, ssn, y, m, d, sex)
 
-        out.close()  # both stderr and files can be closed
+            # check for duplicate records (ignore id)
+            records[line[0:81]].append(line_no)
 
+        # check for duplicate records (ignoring id)
+        check_duplicates(out, records)
+
+        out.close()  # both stderr and files can be closed
 
 
 def main():
