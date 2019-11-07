@@ -23,8 +23,6 @@ No guarantee of any kind is made that this code produces the desired output. Ple
     *  FIRST and LAST NAME and MONTH and YEAR OF BIRTH
     *  SOCIAL SECURITY NUMBER and full DATE OF BIRTH and SEX
 4. Install Python 3.3+ 
-    * installing Anaconda 3 Python distribution is recommended
-    * Anaconda will include the dateutil library by default
 5. (Optional) Install optional packages:
     * Install sas7bdat by running `pip install sas7bdat`
     * Install dateutil by running `pip install dateutil`
@@ -54,6 +52,121 @@ The best way to get started is to figure out which options you need to pass.
     
     # run with a config file
     ndi-formatter "@configfile.conf"
+    
+### Program Options ###
+
+Once the sample config has been created, you can customize the parameters. 
+The following should be helpful in more explicitly documenting the parameters.
+Most of these options are mapping a variable/column name in a CSV, SAS, etc. dataset
+to the type of data which that variable/column contains. 
+
+```
+  -i INPUT_FILE, --input-file INPUT_FILE
+                        Input file path.
+  -o OUTPUT_FILE, --output-file OUTPUT_FILE
+                        NDI-formatted output file.
+  -f {sas,csv,json}, --input-format {sas,csv,json}
+                        Input file format.
+  -L LOG_FILE, --log-file LOG_FILE
+                        Logfile name.
+  --fname FNAME         Name/index of column with first name
+  --lname LNAME         Name/index of column with last name
+  --mname MNAME         Name/index of column with middle name/initial
+  --sname SNAME         Name/index of column with father name
+  --name NAME           Name/index of column with full name
+  --ssn SSN             Name/index of column with ssn; accepts multiple
+                        columns
+  --birth-day BIRTH_DAY
+                        Name/index of column with birth day
+  --birth-month BIRTH_MONTH
+                        Name/index of column with birth month
+  --birth-year BIRTH_YEAR
+                        Name/index of column with birth year
+  --birthdate BIRTHDATE
+                        Name/index of column with birthdate
+  --sex SEX             Name/index of column with sex; accepts multiple
+                        columns
+  --death-age DEATH_AGE
+                        Name/index of column with age at death (in years)
+  --race RACE           Name/index of column with race; accepts multiple
+                        columns
+  --marital-status MARITAL_STATUS
+                        Name/index of column with marital status; accepts
+                        multiple columns
+  --state-of-residence STATE_OF_RESIDENCE
+                        Name/index of column with state of residence; accepts
+                        multiple columns
+  --state-of-birth STATE_OF_BIRTH
+                        Name/index of column with state of birth; accepts
+                        multiple columns
+  --id ID               Name/index of column with id number
+  --race-mapping OA/PI WH BA NA/IN CH JP HI Onon-WH FL
+                        Mapping of variable to NDI race in following order:
+                        Other Asian/Pacific Islander, White, Black, Native American,
+                        Chinese, Japanese, Hawaiian, Other nonwhite, Filipino;
+                        everything else will be treated as unknown; use an "X"
+                        instead of a value to skip a race
+  --marital-status-mapping Single Married Widowed Divorced
+                        Mapping of variable to ND marital status in following
+                        order: Never married/single, Married, Widowed,
+                        Divorced; everything else will be treated as unknown;
+                        use an "X" instead of a value to skip a status
+  --same-state-of-residence-for-all SAME_STATE_OF_RESIDENCE_FOR_ALL
+                        State abbreviation/number for all subjects
+  --same-state-of-birth-for-all SAME_STATE_OF_BIRTH_FOR_ALL
+                        State abbreviation/number for all subjects
+  --age-at-death-units-for-all {MONTH,WEEK,DAY,HOUR,MINUTE}
+                        Specify units for age of death it not years.
+  --name-format NAME_FORMAT
+                        Format to parse full names. L=Last name, F=first name,
+                        M=Middle name, S=father name, X=ignore; algorithm will
+                        continue to add any character found to the name until
+                        the next non-[LFMSX] character is found
+  --date-format DATE_FORMAT
+                        Date format for parsing year/month/day from a date;
+                        for more documentation, see https://docs.python.org/de
+                        v/library/datetime.html#strftime-and-strptime-behavior
+  --sex-format SEX_FORMAT
+                        Specify the values for male/female if different than
+                        NDI using "MALE,FEMALE"; NDI default is "M,F" or "1,2"
+                        or "M1,F2"
+  --validate-generated-file [VALIDATE_GENERATED_FILE]
+                        Validate NDI file and output results to specified
+                        file.
+  --strip-lname-suffix [STRIP_LNAME_SUFFIX]
+                        Look for suffixes in lname column and strip them out;
+                        default: JR, SR, II, III, IV; if specifying an
+                        argument, use a comma-separated list as a single
+                        string
+  --strip-lname-suffix-attached [STRIP_LNAME_SUFFIX_ATTACHED]
+                        Look for suffixes in last word of lname column and
+                        strip them out even if they are attached to the word
+                        itself; default: JR, SR, II, III, IV; if specifying an
+                        argument, use a comma-separated list as a single
+                        string
+
+optional arguments:
+  --duplicate-records-on-lname
+                        If space or hyphen in last name, duplicate the subject
+                        into three records: 1) both together; 2) only the
+                        first part; 3) only the second part
+  --female-hyphen-lname-to-sname
+                        If hyphen in last name of female, duplicate the
+                        subject into two records: 1) both together; 2) only
+                        the first part with the second part in the father last
+                        name field
+  --duplicate-records-on-year-only
+                        Create 12 duplicate records if only a year and no
+                        month
+  --ignore-invalid-records
+                        Ignore records which invalid per NDI requirements due
+                        to insufficient information
+  --include-invalid-records
+                        Include records which invalid per NDI requirements due
+                        to insufficient information
+  --case-sensitive-columns
+                        All columns will be treated as case-sensitive.
+```
 
 ### Advanced ###
 #### Multiple Columns ####
@@ -74,3 +187,6 @@ Additional validation is available by including the [recommended] `--validate-ge
 Validation comes in two forms:
 1. Is the data formatted correctly? (Done by validator)
 2. Is the record eligibile for NDI review? (Done by both formatter and validator)
+
+# License
+MIT licensed: https://kpwhri.mit-license.org/

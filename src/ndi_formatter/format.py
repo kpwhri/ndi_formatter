@@ -380,8 +380,8 @@ def main():
     parser.add_argument('--race-mapping', nargs=9, default=None,
                         metavar=('OA/PI', 'WH', 'BA', 'NA/IN', 'CH', 'JP', 'HI', 'Onon-WH', 'FL'),
                         help='Mapping of variable to NDI race in following order: '
-                             'Other Asian/Pacific Islander, White, Black, Indian, Chinese, Japanese, Hawaiian, '
-                             'Other nonwhite, Filipino; everything else will be treated '
+                             'Other Asian/Pacific Islander, White, Black, Native American, Chinese, Japanese, '
+                             'Hawaiian, Other nonwhite, Filipino; everything else will be treated '
                              'as unknown; use an "X" instead of a value to skip a race')
     parser.add_argument('--marital-status-mapping', nargs=4, default=None,
                         metavar=('Single', 'Married', 'Widowed', 'Divorced'),
