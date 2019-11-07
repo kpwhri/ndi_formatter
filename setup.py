@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 import setuptools
 import os
 
@@ -10,6 +10,7 @@ setup(name='ndi_formatter',
       version='1.0.3',
       description='Format data for National Death Index (NDI) requests.',
       long_description=long_description,
+      long_description_content_type='text/markdown',
       url='https://github.com/kpwhri/ndi_formatter',
       author='dcronkite',
       author_email='dcronkite@gmail.com',
