@@ -22,7 +22,7 @@ No guarantee of any kind is made that this code produces the desired output. Ple
     *  FIRST and LAST NAME and SOCIAL SECURITY NUMBER
     *  FIRST and LAST NAME and MONTH and YEAR OF BIRTH
     *  SOCIAL SECURITY NUMBER and full DATE OF BIRTH and SEX
-4. Install Python 3.3+ 
+4. Install Python 3.6+ 
 5. (Optional) Install optional packages:
     * Install sas7bdat by running `pip install sas7bdat`
     * Install dateutil by running `pip install dateutil`
